@@ -41,6 +41,7 @@
             color: #fff;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             z-index: 1000;
             padding: 0 15px;
             box-sizing: border-box;
@@ -80,6 +81,26 @@
             white-space: nowrap;
             pointer-events: none;
         }
+        .header-right {
+            display: flex;
+            flex: 1;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .cashier-link-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 6px;
+            color: #fff;
+            padding: 5px 10px;
+            font-size: 0.7em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            white-space: nowrap;
+        }
+        .cashier-link-btn:hover { background: rgba(255,255,255,0.3); }
 
         #full-loader {
             position: fixed;
@@ -100,6 +121,7 @@
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
         .nav-btn {
             background: none;
@@ -128,11 +150,10 @@
             box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
             animation: fadeIn 0.5s;
         }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .main-container { width: 100%; max-width: 1200px; margin: auto; padding-top: 20px; padding-bottom: 50px; box-sizing: border-box; }
         .view-title { font-size: 1.8em; font-weight: 900; color: var(--primary); border-left: 6px solid var(--accent); padding-left: 15px; margin: 0 15px 25px 15px; }
-
-        #home-view, #stores-view, #timetable-view { background: transparent; }
 
         /* ===== マップ・店舗グリッド ===== */
         .floor-section { margin-bottom: 60px; }
@@ -159,6 +180,7 @@
 
         @media (max-width: 900px) {
             .store-grid { grid-template-columns: repeat(2, 1fr); }
+            .header-center { font-size: 1.0em; }
         }
 
         .store-card { background: white; border-radius: 12px; overflow: hidden; cursor: pointer; border: 1px solid #e2e8f0; display: flex; flex-direction: column; position: relative; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
@@ -197,14 +219,7 @@
         .calendar { display: flex; background: #fff; border-radius: var(--radius); border: 1px solid #e2e8f0; overflow: hidden; position: relative; width: fit-content; }
         .calendar-grid { display: grid; }
         
-        /* タイムテーブル左上の角のマス */
-        .corner-cell { 
-            height: 50px; 
-            background: var(--primary); 
-            border-right: 1px solid rgba(255,255,255,0.2); 
-            box-sizing: border-box;
-        }
-
+        .corner-cell { height: 50px; background: var(--primary); border-right: 1px solid rgba(255,255,255,0.2); box-sizing: border-box; }
         .time-col { background: #fff; border-right: 1px solid #e2e8f0; width: 80px; z-index: 10; }
         .time-label { height: var(--hour-height); font-size: .8em; color: #64748b; padding: 4px 10px; border-bottom: 1px solid #f1f5f9; box-sizing: border-box; text-align: center; }
         .venue-col { border-right: 1px solid #e2e8f0; position: relative; width: 200px; }
@@ -231,6 +246,9 @@
             <button id="nav-timetable" class="nav-btn" onclick="switchTab('timetable')">予定表</button>
         </div>
         <div class="header-center">香陵祭</div>
+        <div class="header-right">
+            <button class="cashier-link-btn" onclick="tryOpenCashier()">生徒用レジ</button>
+        </div>
     </header>
 
     <div id="update-bar"></div>
@@ -270,11 +288,9 @@
             <span>📢</span><span class="ann-text"></span>
         </div>
         <h1 class="view-title">イベントスケジュール</h1>
-        
         <div class="timetable-map-container">
             <img src="https://www.shonan-fill.com/_system/wp-content/uploads/2025/11/map1F_251101%EF%BC%88%E3%82%BD%E3%83%95%E3%83%88%E3%83%90%E3%83%B3%E3%82%AF%E3%82%B5%E3%83%86%E3%83%A9%E3%82%A4%E3%83%88%E8%BF%BD%E5%8A%A0%EF%BC%89.png" class="floor-map-img" alt="全体マップ">
         </div>
-
         <div class="calendar-wrapper"><div class="calendar"><div id="timetable-grid" class="calendar-grid"></div></div></div>
     </div>
 
@@ -289,15 +305,25 @@
 
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbwTnET9tIVfvIvJxV8y-dEzQvAqt-Y24ynhO_SEqw5h5InxvVZ8qG6EmmMQnn1VBE1U/exec';
-        const FLOOR_MAPS = {
-            '1': 'Map_1.png',
-            '2': 'https://www.shonan-fill.com/_system/wp-content/uploads/2025/11/map1F_251101%EF%BC%88%E3%82%BD%E3%83%95%E3%83%88%E3%83%90%E3%83%B3%E3%82%AF%E3%82%B5%E3%83%86%E3%83%A9%E3%82%A4%E3%83%88%E8%BF%BD%E5%8A%A0%EF%BC%89.png',
-            '3': 'https://www.shonan-fill.com/_system/wp-content/uploads/2025/11/map1F_251101%EF%BC%88%E3%82%BD%E3%83%95%E3%83%88%E3%83%90%E3%83%B3%E3%82%AF%E3%82%B5%E3%83%86%E3%83%A9%E3%82%A4%E3%83%88%E8%BF%BD%E5%8A%A0%EF%BC%89.png'
-        };
+        // GitHub PagesのレジシステムURLを指定
+        const CASHIER_URL = 'https://potetaro33-hub.github.io/01/'; 
+        const FLOOR_MAPS = { '1': 'Map_1.png', '2': 'Map_2.png', '3': 'Map_3.png' };
         const START_H = 9, SCALE = 1.5, GAP = 3;
         const VENUE_THEMES = { '体育館': { bg: '#FFCDD2', border: '#E53935' }, '中庭ステージ': { bg: '#FFF9C4', border: '#FBC02D' }, '武道場': { bg: '#C8E6C9', border: '#43A047' } };
+        // 生徒用パスワード
+        const CASHIER_PW = "7979"; 
 
         let cache = { stores: [], timetable: [], announcement: "" };
+
+        // パスワード入力後にレジ画面を開く
+        function tryOpenCashier() {
+            const pw = prompt("パスワードを入力してください（生徒専用）");
+            if (pw === CASHIER_PW) {
+                window.open(CASHIER_URL, '_blank');
+            } else if (pw !== null) {
+                alert("パスワードが違います");
+            }
+        }
 
         function getStatusClass(status) {
             if (status === "スムーズ") return "status-low";
@@ -335,32 +361,10 @@
             try {
                 const res = await fetch(`${API_URL}?type=quick`);
                 const data = await res.json();
-                
                 if (data.announcement !== cache.announcement) {
                     cache.announcement = data.announcement;
-                    const banners = document.querySelectorAll('.announcement-banner');
-                    const textElements = document.querySelectorAll('.ann-text');
-                    banners.forEach(b => b.style.display = cache.announcement ? 'flex' : 'none');
-                    textElements.forEach(t => t.textContent = cache.announcement);
-                }
-
-                if (data.stores) {
-                    data.stores.forEach(update => {
-                        const [name, status] = update;
-                        const sClass = getStatusClass(status);
-                        const cards = document.querySelectorAll(`[data-store-name="${name}"]`);
-                        cards.forEach(card => {
-                            let badge = card.querySelector('.congestion-badge');
-                            if (badge) {
-                                badge.textContent = status;
-                                badge.className = `congestion-badge ${sClass}`;
-                            }
-                        });
-                        const pins = document.querySelectorAll(`[data-pin-name="${name}"]`);
-                        pins.forEach(pin => {
-                            pin.className = `map-pin ${sClass}`;
-                        });
-                    });
+                    document.querySelectorAll('.ann-text').forEach(t => t.textContent = cache.announcement);
+                    document.querySelectorAll('.announcement-banner').forEach(b => b.style.display = cache.announcement ? 'flex' : 'none');
                 }
                 saveToStorage();
             } catch (e) { console.warn("Quick update failed", e); }
@@ -372,9 +376,10 @@
         }
 
         function switchTab(tab) {
-            document.getElementById('home-view').style.display = tab === 'home' ? 'flex' : 'none';
-            document.getElementById('stores-view').style.display = tab === 'stores' ? 'block' : 'none';
-            document.getElementById('timetable-view').style.display = tab === 'timetable' ? 'block' : 'none';
+            ['home','stores','timetable'].forEach(v => {
+                const el = document.getElementById(v+'-view');
+                if (el) el.style.display = v === tab ? (v === 'home' ? 'flex' : 'block') : 'none';
+            });
             document.getElementById('nav-home').classList.toggle('active-tab', tab === 'home');
             document.getElementById('nav-stores').classList.toggle('active-tab', tab === 'stores');
             document.getElementById('nav-timetable').classList.toggle('active-tab', tab === 'timetable');
@@ -383,62 +388,40 @@
         }
 
         function renderStores() {
-            if (!cache.stores) return;
             const container = document.getElementById('stores-content');
             const floors = [...new Set(cache.stores.map(r => r[0]))].sort();
             container.innerHTML = floors.map(f => {
                 const floorStores = cache.stores.filter(r => r[0] == f);
-                return `
-                <div class="floor-section">
+                return `<div class="floor-section">
                     <div class="floor-header"><span class="floor-num">${f}F</span></div>
                     <div class="floor-map-container">
                         <img src="${FLOOR_MAPS[f] || ''}" class="floor-map-img">
-                        ${floorStores.map(s => `
-                            <div class="map-pin ${getStatusClass(s[3])}" 
-                                 data-pin-name="${s[1]}" 
-                                 style="left:${s[5] || 50}%; top:${s[6] || 50}%;" 
-                                 onclick='openStoreModal(${JSON.stringify(s)})'>
-                                <img src="${s[4] || ''}" onerror="this.style.display='none'">
-                            </div>`).join('')}
+                        ${floorStores.map(s => `<div class="map-pin ${getStatusClass(s[3])}" style="left:${s[5]||50}%; top:${s[6]||50}%;" onclick='openStoreModal(${JSON.stringify(s)})'><img src="${s[4]||''}" onerror="this.style.display='none'"></div>`).join('')}
                     </div>
-                    <div class="store-grid">
-                        ${floorStores.map(s => `
-                            <div class="store-card" data-store-name="${s[1]}" onclick='openStoreModal(${JSON.stringify(s)})'>
-                                <div class="congestion-badge ${getStatusClass(s[3])}">${s[3]}</div>
-                                <div class="store-img-wrapper"><img src="${s[4] || 'https://via.placeholder.com/300'}" class="store-img"></div>
-                                <div class="store-name-tag">${s[1]}</div>
-                            </div>
-                        `).join('')}
-                    </div>
+                    <div class="store-grid">${floorStores.map(s => `<div class="store-card" onclick='openStoreModal(${JSON.stringify(s)})'><div class="congestion-badge ${getStatusClass(s[3])}">${s[3]}</div><div class="store-img-wrapper"><img src="${s[4]||'https://via.placeholder.com/300'}" class="store-img"></div><div class="store-name-tag">${s[1]}</div></div>`).join('')}</div>
                 </div>`;
             }).join('');
         }
 
         function renderTimetable() {
             const data = cache.timetable;
-            if (!data) return;
             const grid = document.getElementById('timetable-grid');
             const venues = [...new Set(data.map(r => r[0]))];
             grid.style.gridTemplateColumns = `80px repeat(${venues.length}, 200px)`;
-            
-            // 左上のマス(corner-cell)を含む時間軸カラムの生成
             let html = `<div class="time-col"><div class="corner-cell"></div>`;
             for (let h = START_H; h < 17; h++) html += `<div class="time-label">${h}:00</div>`;
             html += `</div>`;
-            
             venues.forEach(venue => {
                 const theme = VENUE_THEMES[venue] || { bg: '#f1f5f9', border: '#94a3b8' };
                 const venueEvents = data.filter(r => r[0] === venue);
-                let maxEndMin = 0;
-                venueEvents.forEach(ev => { const e = new Date(ev[2]); const m = (e.getHours() - START_H) * 60 + e.getMinutes(); if (m > maxEndMin) maxEndMin = m; });
-                html += `<div class="venue-col"><div class="venue-header" style="background:${theme.border}">${venue}</div><div class="venue-body" style="height:${Math.max(600, maxEndMin * SCALE)}px">`;
-                venueEvents.forEach(ev => {
-                    const s = new Date(ev[1]), e = new Date(ev[2]);
-                    const top = ((s.getHours() - START_H) * 60 + s.getMinutes()) * SCALE;
-                    let h = ((e - s) / 60000) * SCALE - GAP;
-                    html += `<div class="event" style="top:${top}px; height:${Math.max(h, 25)}px; background:${theme.bg}; border-left: 4px solid ${theme.border}" onclick='openEventModal(${JSON.stringify(ev)})'><strong>${ev[3]}</strong><small style="color:${theme.border}; font-weight:bold;">${s.getHours()}:${String(s.getMinutes()).padStart(2, '0')}〜</small></div>`;
-                });
-                html += `</div></div>`;
+                html += `<div class="venue-col"><div class="venue-header" style="background:${theme.border}">${venue}</div><div class="venue-body" style="height:600px">
+                    ${venueEvents.map(ev => {
+                        const s = new Date(ev[1]), e = new Date(ev[2]);
+                        const top = ((s.getHours()-START_H)*60+s.getMinutes())*SCALE;
+                        const h = ((e-s)/60000)*SCALE - GAP;
+                        return `<div class="event" style="top:${top}px; height:${Math.max(h, 25)}px; background:${theme.bg}; border-left: 4px solid ${theme.border}" onclick='openEventModal(${JSON.stringify(ev)})'><strong>${ev[3]}</strong><small style="color:${theme.border}; font-weight:bold;">${s.getHours()}:${String(s.getMinutes()).padStart(2,'0')}〜</small></div>`;
+                    }).join('')}
+                </div></div>`;
             });
             grid.innerHTML = html + `<div id="now-line" class="now-line"></div>`;
             updateNowLine();
@@ -448,15 +431,14 @@
             const line = document.getElementById('now-line');
             if (!line) return;
             const now = new Date(), m = (now.getHours() - START_H) * 60 + now.getMinutes();
-            if (m >= 0 && m < (17-START_H)*60) { line.style.top = (50 + m * SCALE) + 'px'; line.style.display = 'block'; } else line.style.display = 'none';
+            if (m >= 0 && m < 480) { line.style.top = (50 + m * SCALE) + 'px'; line.style.display = 'block'; } else line.style.display = 'none';
         }
 
         function openEventModal(ev) {
             const s = new Date(ev[1]), e = new Date(ev[2]);
-            const timeStr = `${s.getHours()}:${String(s.getMinutes()).padStart(2, '0')} 〜 ${e.getHours()}:${String(e.getMinutes()).padStart(2, '0')}`;
             document.getElementById('m-title').textContent = ev[3];
             document.getElementById('m-img-container').innerHTML = '';
-            document.getElementById('m-info').textContent = `📍場所: ${ev[0]}\n⏰時間: ${timeStr}`;
+            document.getElementById('m-info').textContent = `📍場所: ${ev[0]}\n⏰時間: ${s.getHours()}:${String(s.getMinutes()).padStart(2,'0')} 〜 ${e.getHours()}:${String(e.getMinutes()).padStart(2,'0')}`;
             document.getElementById('m-desc').textContent = ev[4] || '詳細なし';
             document.getElementById('modal').style.display = 'flex';
         }
@@ -477,18 +459,12 @@
                 refreshCurrentView();
             }
             await reloadAllData();
-            if (!hasCache) {
-                const loader = document.getElementById('full-loader');
-                loader.style.opacity = '0';
-                setTimeout(() => loader.style.display = 'none', 500);
-            }
+            const loader = document.getElementById('full-loader');
+            loader.style.opacity = '0';
+            setTimeout(() => loader.style.display = 'none', 500);
             setInterval(quickUpdate, 10000);
             setInterval(updateNowLine, 60000);
         }
-
-        document.addEventListener("visibilitychange", () => {
-            if (document.visibilityState === "visible") { reloadAllData(); }
-        });
 
         window.onload = init;
     </script>
