@@ -19,8 +19,7 @@
             --status-mid: #f59e0b;
             --status-high: #ef4444;
             --status-closed: #64748b;
-            /* タイムテーブルの列幅変数を追加 */
-            --venue-width: 200px;
+            --col-width: 200px; /* PC版の基本列幅 */
         }
 
         body {
@@ -50,9 +49,9 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
-        /* スマホ専用の2段構成修正 & タイムテーブル幅の調整 */
+        /* スマホ専用の2段構成修正 & タイムテーブル最適化 */
         @media (max-width: 600px) {
-            body { padding-top: 100px; } 
+            body { padding-top: 100px; }
             #fixed-header {
                 height: 100px;
                 flex-direction: column;
@@ -76,9 +75,24 @@
                 right: 10px;
             }
             #update-bar { top: 100px !important; }
-            
-            /* スマホ時は列幅を狭くする */
-            :root { --venue-width: 120px; }
+
+            /* タイムテーブルのスマホ用列幅と余白調整 */
+            :root { 
+                --col-width: 110px; /* スマホでは列幅を半分近くまで縮小 */
+            }
+            .calendar-wrapper {
+                padding: 0 5px !important; /* 横の余白を最小化 */
+            }
+            .time-col {
+                width: 50px !important; /* 時間軸の幅も縮小 */
+            }
+            .venue-header {
+                font-size: 0.8em;
+            }
+            .event strong {
+                font-size: 0.85em;
+                line-height: 1.2;
+            }
         }
 
         #update-bar {
@@ -239,31 +253,23 @@
         .action-btn { padding: 16px; border-radius: 50px; border: none; font-weight: bold; font-size: 1.1em; cursor: pointer; text-align: center; transition: 0.3s; text-decoration: none; }
         .btn-primary { background: var(--primary); color: white; }
 
+        /* タイムテーブル周り */
         .timetable-map-container { margin: 0 15px 30px 15px; background: white; border-radius: var(--radius); overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-        .calendar-wrapper { display: flex; justify-content: center; padding: 0 15px; overflow-x: auto; }
+        .calendar-wrapper { display: flex; justify-content: center; padding: 0 15px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .calendar { display: flex; background: #fff; border-radius: var(--radius); border: 1px solid #e2e8f0; overflow: hidden; position: relative; width: fit-content; }
         .calendar-grid { display: grid; }
         
         .corner-cell { height: 50px; background: var(--primary); border-right: 1px solid rgba(255,255,255,0.2); box-sizing: border-box; }
-        .time-col { background: #fff; border-right: 1px solid #e2e8f0; width: 80px; z-index: 10; }
+        .time-col { background: #fff; border-right: 1px solid #e2e8f0; width: 80px; z-index: 10; flex-shrink: 0; }
         .time-label { height: var(--hour-height); font-size: .8em; color: #64748b; padding: 4px 10px; border-bottom: 1px solid #f1f5f9; box-sizing: border-box; text-align: center; }
-        
-        /* 列幅に変数を適用 */
-        .venue-col { border-right: 1px solid #e2e8f0; position: relative; width: var(--venue-width); }
-        
-        .venue-header { height: 50px; color: #fff; font-weight: bold; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .venue-col { border-right: 1px solid #e2e8f0; position: relative; width: var(--col-width); flex-shrink: 0; }
+        .venue-header { height: 50px; color: #fff; font-weight: bold; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid rgba(255,255,255,0.1); white-space: nowrap; overflow: hidden; }
         .venue-body { position: relative; background: #fff; }
-        .event { position: absolute; left: 4px; right: 4px; border-radius: 6px; padding: 6px; font-size: .75em; cursor: pointer; z-index: 5; box-sizing: border-box; display: flex; flex-direction: column; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .event { position: absolute; left: 4px; right: 4px; border-radius: 6px; padding: 6px; font-size: .75em; cursor: pointer; z-index: 5; box-sizing: border-box; display: flex; flex-direction: column; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; }
         .now-line { position: absolute; left: 0; right: 0; height: 2px; background: var(--accent); z-index: 30; pointer-events: none; }
 
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
         .modal-content { background: #fff; padding: 25px; border-radius: 24px; width: 100%; max-width: 440px; position: relative; max-height: 90vh; overflow-y: auto; }
-
-        .cashier-open-btn {
-            display: block; width: 100%; padding: 12px; background: var(--primary); color: white;
-            border: none; border-radius: 8px; font-weight: bold; margin-top: 15px; cursor: pointer;
-            text-align: center; text-decoration: none;
-        }
     </style>
 </head>
 <body class="updating">
@@ -339,7 +345,6 @@
 
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbwTnET9tIVfvIvJxV8y-dEzQvAqt-Y24ynhO_SEqw5h5InxvVZ8qG6EmmMQnn1VBE1U/exec';
-        
         const CASHIER_URL = 'cashier.html'; 
         const CASHIER_PW = "7979"; 
 
@@ -441,9 +446,11 @@
             const grid = document.getElementById('timetable-grid');
             const venues = [...new Set(data.map(r => r[0]))];
             
-            // JS内の幅指定もCSS変数を使うように修正
-            const venueWidth = getComputedStyle(document.documentElement).getPropertyValue('--venue-width').trim();
-            grid.style.gridTemplateColumns = `80px repeat(${venues.length}, ${venueWidth})`;
+            // CSS変数から列幅を取得
+            const colWidth = getComputedStyle(document.documentElement).getPropertyValue('--col-width').trim();
+            const timeColWidth = (window.innerWidth <= 600) ? "50px" : "80px";
+
+            grid.style.gridTemplateColumns = `${timeColWidth} repeat(${venues.length}, ${colWidth})`;
             
             let html = `<div class="time-col"><div class="corner-cell"></div>`;
             for (let h = START_H; h < 17; h++) html += `<div class="time-label">${h}:00</div>`;
