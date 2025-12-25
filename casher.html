@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>香陵祭 統合型POSレジ (高速版)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #000080; --accent: #ef4444; --bg: #f0f2f5; --text: #1e293b; }
+        
+        body { 
+            font-family: 'Noto Sans JP', sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            padding-top: 80px; 
+            display: flex; 
+            justify-content: center; 
+        }
+
+        /* ===== 固定ヘッダー ===== */
+        #fixed-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: var(--primary);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 0 15px;
+            box-sizing: border-box;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        /* スマホ専用の2段構成修正 */
+        @media (max-width: 600px) {
+            body { padding-top: 100px; }
+            #fixed-header {
+                height: 90px;
+                flex-direction: column;
+                justify-content: center;
+                gap: 5px;
+            }
+        }
+
+        .header-title {
+            font-weight: 900;
+            font-size: 1.2em;
+            letter-spacing: 0.1em;
+        }
+
+        .header-right {
+            position: absolute;
+            right: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        #sync-spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* ===== メインコンテンツ ===== */
+        .cashier-container { 
+            width: 100%; 
+            max-width: 500px; 
+            background: white; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            padding: 25px; 
+            min-height: 450px; 
+            margin-bottom: 40px;
+        }
+
+        .view-header {
+            text-align: center;
+            border-bottom: 2px solid #eee;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            position: relative;
+        }
+
+        .view-header h2 {
+            font-size: 1.1rem;
+            margin: 0;
+            color: var(--primary);
+        }
+
+        .view { display: none; }
+        .view.active { display: block; }
+
+        select { width: 100%; padding: 15px; font-size: 1.1em; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 20px; background: #fff; }
+        
+        #product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        
+        .product-card { border: 1px solid #e2e8f0; border-radius: 15px; overflow: hidden; cursor: pointer; background: white; transition: 0.1s; user-select: none; }
+        .product-card:active { transform: scale(0.95); background-color: #f0fdf4; }
+        .product-card.sold-out { opacity: 0.4; filter: grayscale(1); pointer-events: none; }
+        
+        .product-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #f8fafc; }
+        .product-info { padding: 12px; text-align: center; }
+        .p-name { font-weight: bold; font-size: 0.95rem; margin-bottom: 4px; }
+        .p-price { color: var(--accent); font-weight: 900; font-size: 1.1rem; }
+        .p-stock { font-size: 0.8em; color: #64748b; margin-top: 4px; }
+        
+        .btn-action { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1em; }
+        .btn-blue { background: var(--primary); color: white; }
+        .btn-gray { background: #e2e8f0; color: var(--text); }
+        .btn-back { position: absolute; left: 0; top: 0; background: none; border: none; color: var(--primary); cursor: pointer; font-size: 1.2em; padding: 10px; }
+    </style>
+</head>
+<body>
+
+    <header id="fixed-header">
+        <div class="header-title">香陵祭レジ</div>
+        <div class="header-right">
+            <div id="sync-spinner"></div>
+        </div>
+    </header>
+
+    <div class="cashier-container">
+        <div class="view-header">
+            <button id="back-to-select" class="btn-back" style="display:none;" onclick="showSelectionView()">←</button>
+            <h2 id="view-title">レジログイン</h2>
+        </div>
+
+        <div id="selection-view" class="view active">
+            <p style="text-align:center; color:#64748b;">店舗を選択してください</p>
+            <select id="shop-selector">
+                <option value="">リストを取得中...</option>
+            </select>
+            <button id="start-btn" class="btn-action btn-blue" onclick="startCashier()" disabled>レジを開始する</button>
+        </div>
+
+        <div id="register-view" class="view">
+            <div id="product-grid"></div>
+            <button class="btn-action btn-gray" style="margin-top:20px;" onclick="loadInventory()">在庫情報を同期</button>
+        </div>
+    </div>
+
+<script>
+    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwMQxYShsVsnf8VEhBN6cbhht-C-_C31JEPZEp9x_XqQSIEz6fRdH7tKSfdOk3WAzgtaQ/exec'; 
+    let currentSheetName = '';
+    let inventoryData = [];
+
+    async function init() {
+        try {
+            const res = await fetch(`${GAS_API_URL}?action=getShops`);
+            const shops = await res.json();
+            const selector = document.getElementById('shop-selector');
+            selector.innerHTML = '<option value="">-- 店舗を選択 --</option>';
+            shops.forEach(shop => {
+                const opt = document.createElement('option');
+                opt.value = shop.sheetName;
+                opt.textContent = shop.name;
+                selector.appendChild(opt);
+            });
+            document.getElementById('start-btn').disabled = false;
+        } catch (e) {
+            alert("店舗リストの読み込みに失敗しました。");
+        }
+    }
+
+    function showSelectionView() {
+        document.getElementById('selection-view').classList.add('active');
+        document.getElementById('register-view').classList.remove('active');
+        document.getElementById('back-to-select').style.display = 'none';
+        document.getElementById('view-title').innerText = 'レジログイン';
+    }
+
+    async function startCashier() {
+        const selector = document.getElementById('shop-selector');
+        currentSheetName = selector.value;
+        if (!currentSheetName) return alert("店舗を選択してください");
+
+        document.getElementById('view-title').innerText = selector.options[selector.selectedIndex].text;
+        document.getElementById('selection-view').classList.remove('active');
+        document.getElementById('register-view').classList.add('active');
+        document.getElementById('back-to-select').style.display = 'block';
+        loadInventory();
+    }
+
+    async function loadInventory() {
+        showSync(true);
+        try {
+            const res = await fetch(`${GAS_API_URL}?action=getInventory&sheetName=${encodeURIComponent(currentSheetName)}`);
+            inventoryData = await res.json();
+            renderProducts();
+        } catch (e) { alert("在庫の取得に失敗しました"); }
+        finally { showSync(false); }
+    }
+
+    function renderProducts() {
+        const grid = document.getElementById('product-grid');
+        grid.innerHTML = inventoryData.map((item, index) => `
+            <div class="product-card ${item.stock <= 0 ? 'sold-out' : ''}" id="card-${index}" onclick="processSale(${index})">
+                <img src="${item.image || ''}" class="product-img">
+                <div class="product-info">
+                    <div class="p-name">${item.name}</div>
+                    <div class="p-price">¥${item.price}</div>
+                    <div class="p-stock" id="stock-${index}">在庫: ${item.stock}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function processSale(index) {
+        const item = inventoryData[index];
+        if (item.stock <= 0) return;
+
+        item.stock--;
+        const stockEl = document.getElementById(`stock-${index}`);
+        const cardEl = document.getElementById(`card-${index}`);
+        stockEl.innerText = `在庫: ${item.stock}`;
+        
+        if (item.stock <= 0) {
+            cardEl.classList.add('sold-out');
+        }
+
+        showSync(true);
+
+        fetch(`${GAS_API_URL}?action=recordSale&sheetName=${encodeURIComponent(currentSheetName)}&row=${item.rowIndex}&name=${encodeURIComponent(item.name)}`)
+            .then(res => res.json())
+            .then(result => {
+                if (result.status !== "success") {
+                    alert("通信エラー: 更新に失敗しました。");
+                }
+            })
+            .catch(e => console.error("Sync Error:", e))
+            .finally(() => showSync(false));
+    }
+
+    function showSync(show) {
+        const spinner = document.getElementById('sync-spinner');
+        if(spinner) spinner.style.display = show ? 'block' : 'none';
+    }
+
+    init();
+</script>
+</body>
+</html>
