@@ -217,7 +217,7 @@
         }
         .map-pin img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* イベント会場用ピンのスタイル（ラベル付き） */
+        /* イベント会場用ピンのスタイル */
         .event-pin {
             position: absolute;
             background: var(--accent);
@@ -230,6 +230,7 @@
             white-space: nowrap;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             z-index: 110;
+            cursor: pointer;
         }
         .event-pin::after {
             content: '';
@@ -280,7 +281,7 @@
 
         /* タイムテーブル周り */
         .timetable-map-container { position: relative; margin: 0 15px 30px 15px; background: white; border-radius: var(--radius); overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-        .calendar-wrapper { display: flex; justify-content: center; padding: 0 15px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .calendar-wrapper { display: flex; justify-content: center; padding: 0 15px; overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
         .calendar { display: flex; background: #fff; border-radius: var(--radius); border: 1px solid #e2e8f0; overflow: hidden; position: relative; width: fit-content; }
         .calendar-grid { display: grid; }
         
@@ -312,7 +313,7 @@
         </div>
         <div class="header-center">香陵祭</div>
         <div class="header-right">
-            <button class="cashier-link-btn" onclick="tryOpenCashier()">生徒用レジ</button>
+            <button class="cashier-link-btn" onclick="tryOpenCashier()">🔒生徒用レジ🔒</button>
         </div>
     </header>
 
@@ -356,7 +357,7 @@
         <div id="timetable-map" class="timetable-map-container">
             <img src="Map_Events.png" class="floor-map-img" alt="全体マップ">
             </div>
-        <div class="calendar-wrapper"><div class="calendar"><div id="timetable-grid" class="calendar-grid"></div></div></div>
+        <div class="calendar-wrapper" id="calendar-scroll-target"><div class="calendar"><div id="timetable-grid" class="calendar-grid"></div></div></div>
     </div>
 
     <div id="modal" class="modal" onclick="this.style.display='none'">
@@ -371,27 +372,40 @@
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbwTnET9tIVfvIvJxV8y-dEzQvAqt-Y24ynhO_SEqw5h5InxvVZ8qG6EmmMQnn1VBE1U/exec';
         const CASHIER_URL = 'casher.html'; 
-        const CASHIER_PW = "7979"; 
+        const CASHIER_PW = "yL2Mj91Iab"; 
 
         const FLOOR_MAPS = { '1': 'Map_1.png', '2': 'Map_2.png', '3': 'Map_3.png' };
         const START_H = 9, SCALE = 1.5, GAP = 3;
         const VENUE_THEMES = { '体育館': { bg: '#FFCDD2', border: '#E53935' }, '中庭ステージ': { bg: '#FFF9C4', border: '#FBC02D' }, '武道場': { bg: '#C8E6C9', border: '#43A047' } };
 
-        // イベント会場のピン設定 (名前, left%, top%)
+        // イベント会場のピン設定 (名前, left%, top%, color)
         const EVENT_LOCATIONS = [
-            { name: '体育館', left: 85, top: 85 },
-            { name: '中庭ステージ', left: 4.5, top: 57 },
-            { name: '武道場', left: 9, top: 13 }
+            { name: '体育館', left: 85, top: 85, color: '#ef4444' },
+            { name: '中庭ステージ', left: 4.5, top: 57, color: '#f59e0b' },
+            { name: '武道場', left: 9, top: 13, color: '#22c55e' }
         ];
 
         let cache = { stores: [], timetable: [], announcement: "" };
+        let failedAttempts = 0; // パスワード試行回数
 
         function tryOpenCashier() {
-            const pw = prompt("パスワードを入力してください（生徒専用）");
+            if (failedAttempts >= 3) {
+                alert("⚠パスワードの入力回数上限に達しました。これ以上入力できません。");
+                return;
+            }
+
+            const pw = prompt(`パスワードを入力してください（生徒専用）\nあと ${3 - failedAttempts} 回入力可能です。`);
+            
             if (pw === CASHIER_PW) {
+                failedAttempts = 0; // 成功したらリセット
                 window.open(CASHIER_URL, '_blank');
             } else if (pw !== null) {
-                alert("パスワードが違います");
+                failedAttempts++;
+                if (failedAttempts >= 3) {
+                    alert("⚠パスワードを3回間違えたため、ロックされました。");
+                } else {
+                    alert(`⚠パスワードが違います⚠\nあと ${3 - failedAttempts} 回入力可能です。`);
+                }
             }
         }
 
@@ -473,6 +487,31 @@
             }).join('');
         }
 
+        function scrollToVenue(venueName) {
+            // タイムテーブルエリアまで全体をスクロール
+            const calendarArea = document.getElementById('calendar-scroll-target');
+            calendarArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // 会場の列（会場ヘッダー）を探す
+            const headers = document.querySelectorAll('.venue-header');
+            let targetCol = null;
+            headers.forEach(h => { if(h.textContent.trim() === venueName) targetCol = h.parentElement; });
+
+            if (targetCol) {
+                // 横スクロール：該当の会場列が左端に来るように
+                calendarArea.scrollLeft = targetCol.offsetLeft - 80; // 80は時間軸の幅
+
+                // 縦スクロール：現在の時刻の位置へ
+                const now = new Date(), m = (now.getHours() - START_H) * 60 + now.getMinutes();
+                if (m >= 0 && m < 480) {
+                    window.scrollTo({
+                        top: targetCol.getBoundingClientRect().top + window.scrollY + (m * SCALE),
+                        behavior: 'smooth'
+                    });
+                }
+            }
+        }
+
         function renderTimetable() {
             const data = cache.timetable;
             const grid = document.getElementById('timetable-grid');
@@ -480,20 +519,29 @@
             
             // イベントマップにピンを描画
             const mapContainer = document.getElementById('timetable-map');
-            // 既存のピンを削除（imgタグ以外を削除）
             const pins = mapContainer.querySelectorAll('.event-pin');
             pins.forEach(p => p.remove());
-            // 新しいピンを追加
+
             EVENT_LOCATIONS.forEach(loc => {
                 const pin = document.createElement('div');
                 pin.className = 'event-pin';
                 pin.style.left = `${loc.left}%`;
                 pin.style.top = `${loc.top}%`;
+                if(loc.color) pin.style.backgroundColor = loc.color;
                 pin.textContent = loc.name;
+                // クリック時にスクロール実行
+                pin.onclick = () => scrollToVenue(loc.name);
+                
+                // 下の三角部分の色も設定
+                const style = document.createElement('style');
+                const pinId = "pin-" + loc.name.replace(/\s+/g, '');
+                pin.classList.add(pinId);
+                style.innerHTML = `.${pinId}::after { border-top-color: ${loc.color || 'var(--accent)'}; }`;
+                document.head.appendChild(style);
+
                 mapContainer.appendChild(pin);
             });
 
-            // CSS変数から列幅を取得
             const colWidth = getComputedStyle(document.documentElement).getPropertyValue('--col-width').trim();
             const timeColWidth = (window.innerWidth <= 600) ? "50px" : "80px";
 
