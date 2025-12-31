@@ -51,7 +51,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
-        /* ★ スマホ専用の2段構成調整 ★ (メディアクエリを480pxに変更) */
+        /* スマホ専用の2段構成調整 */
         @media (max-width: 480px) {
             body { padding-top: 100px; }
             #fixed-header {
@@ -60,7 +60,6 @@
                 justify-content: space-evenly;
                 padding: 5px 10px;
             }
-            /* タイトル（香陵祭）を上段に */
             .header-center {
                 position: static !important;
                 transform: none !important;
@@ -69,7 +68,6 @@
                 width: 100%;
                 text-align: center;
             }
-            /* ナビゲーションを下段に */
             .header-left {
                 order: 2;
                 width: 100%;
@@ -77,7 +75,6 @@
                 display: flex;
                 height: 40px;
             }
-            /* 生徒用レジボタンを右上に固定 */
             .header-right {
                 position: absolute;
                 top: 10px;
@@ -92,7 +89,6 @@
             .venue-header { font-size: 0.8em; }
             .event strong { font-size: 0.85em; line-height: 1.2; }
 
-            /* ピンのサイズ調整 */
             .map-pin {
                 width: 28px !important;
                 height: 28px !important;
@@ -295,6 +291,7 @@
         .theme-title { font-size: 3em; font-weight: 900; color: var(--primary); margin: 0 0 20px 0; line-height: 1.2; }
         .theme-box { border: 3px dashed var(--primary); padding: 20px; border-radius: var(--radius); margin-bottom: 30px; }
         .theme-word { font-size: 3em; font-weight: 900; color: #be185d; text-align: center; display: block; }
+        .theme-word-timer { font-size: 1.2em; font-weight: 900; color: var(--primary); text-align: center; display: block; }
         .theme-sub { text-align: center; color: #64748b; font-weight: bold; font-size: 1.2em; }
         .btn-group { display: flex; flex-direction: column; gap: 15px; }
         .action-btn { padding: 16px; border-radius: 50px; border: none; font-weight: bold; font-size: 1.1em; cursor: pointer; text-align: center; transition: 0.3s; text-decoration: none; }
@@ -354,11 +351,21 @@
                 <div class="theme-label">79th KORYO-FES</div>
                 <h1 class="theme-title">今年のテーマ</h1>
                 <div class="theme-box"><span class="theme-word">Human</span><p class="theme-sub">すべての人類とは遍く人である</p></div>
+                
+                <div class="theme-box" style="margin-top:-10px; padding:15px; border-style:solid; border-width:2px;">
+                    <span class="theme-word-timer" id="bus-timer">バス情報取得中...</span>
+                    <p class="theme-sub" id="bus-next" style="font-size:0.9em; margin-top:5px;">--:-- 発車</p>
+                </div>
+
                 <div class="btn-group">
                     <button class="action-btn btn-primary" onclick="switchTab('stores')">🗺️ 店舗マップ</button>
                     <button class="action-btn btn-primary" onclick="switchTab('timetable')">⏰ 予定表</button>
                 </div>
             </div>
+        </div>
+        <div class="main-container" style="padding-top:0;">
+            <h1 class="view-title" style="margin-top:30px;">落とし物リスト</h1>
+            <div id="lost-items-grid" class="store-grid"></div>
         </div>
     </div>
 
@@ -377,8 +384,12 @@
         <h1 class="view-title">イベントスケジュール</h1>
         <div id="timetable-map" class="timetable-map-container">
             <img src="Map_Events.png" class="floor-map-img" alt="全体マップ">
+        </div>
+        <div class="calendar-wrapper" id="calendar-scroll-target">
+            <div class="calendar">
+                <div id="timetable-grid" class="calendar-grid"></div>
             </div>
-        <div class="calendar-wrapper" id="calendar-scroll-target"><div class="calendar"><div id="timetable-grid" class="calendar-grid"></div></div></div>
+        </div>
     </div>
 
     <div id="modal" class="modal" onclick="this.style.display='none'">
@@ -396,8 +407,14 @@
         const CASHIER_PW = "yL2Mj91Iab"; 
 
         const FLOOR_MAPS = { '1': 'Map_1.png', '2': 'Map_2.png', '3': 'Map_3.png' };
+        
+        // タイムテーブル用設定
         const START_H = 9, SCALE = 1.5, GAP = 3;
-        const VENUE_THEMES = { '体育館': { bg: '#FFCDD2', border: '#E53935' }, '中庭ステージ': { bg: '#FFF9C4', border: '#FBC02D' }, '武道場': { bg: '#C8E6C9', border: '#43A047' } };
+        const VENUE_THEMES = { 
+            '体育館': { bg: '#FFCDD2', border: '#E53935' }, 
+            '中庭ステージ': { bg: '#FFF9C4', border: '#FBC02D' }, 
+            '武道場': { bg: '#C8E6C9', border: '#43A047' } 
+        };
 
         const EVENT_LOCATIONS = [
             { name: '体育館', left: 85, top: 85, color: '#ef4444' },
@@ -405,7 +422,7 @@
             { name: '武道場', left: 9, top: 13, color: '#22c55e' }
         ];
 
-        let cache = { stores: [], timetable: [], announcement: "" };
+        let cache = { stores: [], timetable: [], announcement: "", bus: [], lostItems: [] };
         let failedAttempts = 0;
 
         function tryOpenCashier() {
@@ -446,14 +463,19 @@
         async function reloadAllData() {
             document.body.classList.add('updating');
             try {
-                const [resS, resT] = await Promise.all([
+                const [resS, resT, resB, resL] = await Promise.all([
                     fetch(`${API_URL}?type=stores`),
-                    fetch(`${API_URL}?type=timetable`) 
+                    fetch(`${API_URL}?type=timetable`),
+                    fetch(`${API_URL}?type=bus`),
+                    fetch(`${API_URL}?type=lost`)
                 ]);
                 cache.stores = await resS.json();
                 cache.timetable = await resT.json();
+                cache.bus = await resB.json();
+                cache.lostItems = await resL.json();
                 saveToStorage();
                 refreshCurrentView();
+                renderLostItems();
                 await quickUpdate();
             } catch (e) { console.error("Reload failed", e); }
             finally { document.body.classList.remove('updating'); }
@@ -475,6 +497,8 @@
         function refreshCurrentView() {
             if (document.getElementById('stores-view').style.display === 'block') renderStores();
             if (document.getElementById('timetable-view').style.display === 'block') renderTimetable();
+            updateBusTimer();
+            renderLostItems();
         }
 
         function switchTab(tab) {
@@ -487,10 +511,12 @@
             document.getElementById('nav-timetable').classList.toggle('active-tab', tab === 'timetable');
             if (tab === 'stores') renderStores();
             if (tab === 'timetable') renderTimetable();
+            if (tab === 'home') renderLostItems();
         }
 
         function renderStores() {
             const container = document.getElementById('stores-content');
+            if (!cache.stores || cache.stores.length === 0) return;
             const floors = [...new Set(cache.stores.map(r => r[0]))].sort();
             container.innerHTML = floors.map(f => {
                 const floorStores = cache.stores.filter(r => r[0] == f);
@@ -505,6 +531,58 @@
             }).join('');
         }
 
+        function renderLostItems() {
+            const container = document.getElementById('lost-items-grid');
+            if (!cache.lostItems || cache.lostItems.length === 0) {
+                container.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:#94a3b8; padding:20px;">現在、登録されている落とし物はありません。</p>';
+                return;
+            }
+            container.innerHTML = cache.lostItems.map(item => `
+                <div class="store-card" onclick='openLostModal(${JSON.stringify(item)})'>
+                    <div class="congestion-badge status-low">保管中</div>
+                    <div class="store-img-wrapper"><img src="${item[2]||'https://via.placeholder.com/300'}" class="store-img"></div>
+                    <div class="store-name-tag">${item[0]}</div>
+                </div>
+            `).join('');
+        }
+
+        function openLostModal(item) {
+            document.getElementById('m-title').textContent = item[0];
+            document.getElementById('m-img-container').innerHTML = item[2] ? `<img src="${item[2]}" style="width:100%; border-radius:12px;">` : '';
+            document.getElementById('m-info').textContent = `📍発見場所: ${item[1]}`;
+            document.getElementById('m-desc').textContent = "心当たりのある方は、1F事務室または本部までお越しください。";
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function updateBusTimer() {
+            const timerEl = document.getElementById('bus-timer');
+            const nextEl = document.getElementById('bus-next');
+            if (!cache.bus || cache.bus.length === 0) return;
+
+            const now = new Date();
+            const nowMin = now.getHours() * 60 + now.getMinutes();
+            
+            let nextBus = null;
+            for (let timeStr of cache.bus) {
+                const [h, m] = timeStr[0].split(':').map(Number);
+                const busMin = h * 60 + m;
+                if (busMin > nowMin) {
+                    nextBus = { h, m, min: busMin };
+                    break;
+                }
+            }
+
+            if (nextBus) {
+                const diff = nextBus.min - nowMin;
+                timerEl.textContent = `次発まで あと ${diff} 分`;
+                nextEl.textContent = `${String(nextBus.h).padStart(2,'0')}:${String(nextBus.m).padStart(2,'0')} 発車予定`;
+            } else {
+                timerEl.textContent = "本日のバスは終了しました";
+                nextEl.textContent = "--:-- 発車";
+            }
+        }
+
+        // タイムテーブルの特定の会場へスクロールする機能
         function scrollToVenue(venueName) {
             const calendarArea = document.getElementById('calendar-scroll-target');
             calendarArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -526,11 +604,13 @@
         function renderTimetable() {
             const data = cache.timetable;
             const grid = document.getElementById('timetable-grid');
+            if (!data || data.length === 0) return;
             const venues = [...new Set(data.map(r => r[0]))];
             
+            // マップ上のピンを再描画
             const mapContainer = document.getElementById('timetable-map');
-            const pins = mapContainer.querySelectorAll('.event-pin');
-            pins.forEach(p => p.remove());
+            const oldPins = mapContainer.querySelectorAll('.event-pin');
+            oldPins.forEach(p => p.remove());
 
             EVENT_LOCATIONS.forEach(loc => {
                 const pin = document.createElement('div');
@@ -550,12 +630,13 @@
             });
 
             const colWidth = getComputedStyle(document.documentElement).getPropertyValue('--col-width').trim();
-            const timeColWidth = (window.innerWidth <= 480) ? "50px" : "80px"; // ここもメディアクエリに合わせて480pxに調整
+            const timeColWidth = (window.innerWidth <= 480) ? "50px" : "80px";
             grid.style.gridTemplateColumns = `${timeColWidth} repeat(${venues.length}, ${colWidth})`;
             
             let html = `<div class="time-col"><div class="corner-cell"></div>`;
             for (let h = START_H; h < 17; h++) html += `<div class="time-label">${h}:00</div>`;
             html += `</div>`;
+
             venues.forEach(venue => {
                 const theme = VENUE_THEMES[venue] || { bg: '#f1f5f9', border: '#94a3b8' };
                 const venueEvents = data.filter(r => r[0] === venue);
@@ -576,7 +657,13 @@
             const line = document.getElementById('now-line');
             if (!line) return;
             const now = new Date(), m = (now.getHours() - START_H) * 60 + now.getMinutes();
-            if (m >= 0 && m < 480) { line.style.top = (50 + m * SCALE) + 'px'; line.style.display = 'block'; } else line.style.display = 'none';
+            // 9:00〜17:00 (480分間) の範囲内であれば表示
+            if (m >= 0 && m < 480) { 
+                line.style.top = (50 + m * SCALE) + 'px'; 
+                line.style.display = 'block'; 
+            } else {
+                line.style.display = 'none';
+            }
         }
 
         function openEventModal(ev) {
@@ -607,8 +694,11 @@
             const loader = document.getElementById('full-loader');
             loader.style.opacity = '0';
             setTimeout(() => loader.style.display = 'none', 500);
-            setInterval(quickUpdate, 10000);
-            setInterval(updateNowLine, 60000);
+            
+            // 定期更新の開始
+            setInterval(quickUpdate, 10000); 
+            setInterval(updateNowLine, 60000); 
+            setInterval(updateBusTimer, 30000); // バス用タイマー更新
         }
         window.onload = init;
     </script>
