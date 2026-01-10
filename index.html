@@ -21,7 +21,7 @@
             --status-mid: #f59e0b;
             --status-high: #ef4444;
             --status-closed: #64748b;
-            --col-width: 200px; /* PC版の基本列幅 */
+            --col-width: 200px;
         }
 
         body {
@@ -33,7 +33,7 @@
             overflow-x: hidden;
         }
 
-        /* ===== ヘッダー ===== */
+        /* ヘッダー */
         #fixed-header {
             position: fixed;
             top: 0;
@@ -51,7 +51,6 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
-        /* スマホ専用の2段構成調整 */
         @media (max-width: 480px) {
             body { padding-top: 100px; }
             #fixed-header {
@@ -81,27 +80,14 @@
                 right: 10px;
             }
             #update-bar { top: 100px !important; }
-
-            /* タイムテーブルのスマホ用調整 */
             :root { --col-width: 110px; }
             .calendar-wrapper { padding: 0 5px !important; }
             .time-col { width: 50px !important; }
             .venue-header { font-size: 0.8em; }
             .event strong { font-size: 0.85em; line-height: 1.2; }
-
-            .map-pin {
-                width: 28px !important;
-                height: 28px !important;
-                border-width: 2px !important;
-            }
-            .event-pin {
-                padding: 2px 6px !important;
-                font-size: 0.65em !important;
-            }
-            .event-pin::after {
-                border-top-width: 4px !important;
-                bottom: -4px !important;
-            }
+            .map-pin { width: 28px !important; height: 28px !important; border-width: 2px !important; }
+            .event-pin { padding: 2px 6px !important; font-size: 0.65em !important; }
+            .event-pin::after { border-top-width: 4px !important; bottom: -4px !important; }
         }
 
         #update-bar {
@@ -137,12 +123,7 @@
             white-space: nowrap;
             pointer-events: none;
         }
-        .header-right {
-            display: flex;
-            flex: 1;
-            justify-content: flex-end;
-            align-items: center;
-        }
+        .header-right { display: flex; flex: 1; justify-content: flex-end; align-items: center; }
 
         .cashier-link-btn {
             background: rgba(255,255,255,0.15);
@@ -227,29 +208,9 @@
         .map-pin img { width: 100%; height: 100%; object-fit: cover; }
         
         .event-pin {
-            position: absolute;
-            background: var(--accent);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.75em;
-            font-weight: bold;
-            transform: translate(-50%, -50%);
-            white-space: nowrap;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            z-index: 110;
-            cursor: pointer;
+            position: absolute; background: var(--accent); color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.75em; font-weight: bold; transform: translate(-50%, -50%); white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.3); z-index: 110; cursor: pointer;
         }
-        .event-pin::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 50%;
-            transform: translateX(-50%);
-            border-left: 5px solid transparent;
-            border-right: 5px solid transparent;
-            border-top: 6px solid var(--accent);
-        }
+        .event-pin::after { content: ''; position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid var(--accent); }
 
         .store-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 0 12px; }
         @media (max-width: 900px) { .store-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -271,14 +232,7 @@
         .home-left { flex: 1; background: rgba(241, 245, 249, 0.7); display: flex; align-items: center; justify-content: center; border-right: 1px solid #e2e8f0; padding: 20px; }
         .home-left img { max-width: 100%; max-height: 80vh; object-fit: contain; }
         
-        .home-right { 
-            flex: 1; 
-            padding: 10px 40px 40px 40px;
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            background: rgba(255, 255, 255, 0.7); 
-        }
+        .home-right { flex: 1; padding: 10px 40px 40px 40px; display: flex; flex-direction: column; justify-content: center; background: rgba(255, 255, 255, 0.7); }
         
         @media (max-width: 768px) {
             .home-hero { flex-direction: column; }
@@ -297,7 +251,7 @@
         .action-btn { padding: 16px; border-radius: 50px; border: none; font-weight: bold; font-size: 1.1em; cursor: pointer; text-align: center; transition: 0.3s; text-decoration: none; }
         .btn-primary { background: var(--primary); color: white; }
 
-        /* タイムテーブル周り */
+        /* タイムテーブル */
         .timetable-map-container { position: relative; margin: 0 15px 30px 15px; background: white; border-radius: var(--radius); overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
         .calendar-wrapper { display: flex; justify-content: center; padding: 0 15px; overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
         .calendar { display: flex; background: #fff; border-radius: var(--radius); border: 1px solid #e2e8f0; overflow: hidden; position: relative; width: fit-content; }
@@ -350,7 +304,7 @@
             <div class="home-right">
                 <div class="theme-label">79th KORYO-FES</div>
                 <h1 class="theme-title">今年のテーマ</h1>
-                <div class="theme-box"><span class="theme-word">テーマ</span><p class="theme-sub">サブタイトル</p></div>
+                <div class="theme-box"><span class="theme-word">テーマ</span><p class="theme-sub">サブテーマ</p></div>
                 
                 <div class="theme-box" style="margin-top:-10px; padding:15px; border-style:solid; border-width:2px;">
                     <span class="theme-word-timer" id="bus-timer">バス情報取得中...</span>
@@ -363,7 +317,7 @@
                 </div>
             </div>
         </div>
-        <div class="main-container" style="padding-top:0;">
+        <div id="lost-items-section" class="main-container" style="padding-top:0; display:none;">
             <h1 class="view-title" style="margin-top:30px;">落とし物リスト</h1>
             <div id="lost-items-grid" class="store-grid"></div>
         </div>
@@ -424,44 +378,25 @@
         let cache = { stores: [], timetable: [], announcement: "", bus: [], lostItems: [] };
         let failedAttempts = 0;
 
-        /**
-         * 日付/時刻文字列を解析して「時」「分」を返すヘルパー関数
-         */
         function parseTime(timeVal) {
             if (!timeVal) return null;
-            
-            // 1. ISO形式（2023-01-01T15:30:00.000Z等）の場合
             const d = new Date(timeVal);
-            if (!isNaN(d.getTime())) {
-                return { h: d.getHours(), m: d.getMinutes() };
-            }
-
-            // 2. "15:30" 形式の文字列の場合
+            if (!isNaN(d.getTime())) return { h: d.getHours(), m: d.getMinutes() };
             const str = timeVal.toString();
             if (str.includes(':')) {
                 const [h, m] = str.split(':').map(Number);
                 if (!isNaN(h) && !isNaN(m)) return { h, m };
             }
-
             return null;
         }
 
         function tryOpenCashier() {
-            if (failedAttempts >= 3) {
-                alert("⚠パスワードの入力回数上限に達しました。これ以上入力できません。");
-                return;
-            }
+            if (failedAttempts >= 3) { alert("⚠パスワードの入力回数上限に達しました。"); return; }
             const pw = prompt(`パスワードを入力してください（生徒専用）\nあと ${3 - failedAttempts} 回入力可能です。`);
-            if (pw === CASHIER_PW) {
-                failedAttempts = 0;
-                window.open(CASHIER_URL, '_blank');
-            } else if (pw !== null) {
+            if (pw === CASHIER_PW) { failedAttempts = 0; window.open(CASHIER_URL, '_blank'); }
+            else if (pw !== null) {
                 failedAttempts++;
-                if (failedAttempts >= 3) {
-                    alert("⚠パスワードを3回間違えたため、ロックされました。");
-                } else {
-                    alert(`⚠パスワードが違います⚠\nあと ${3 - failedAttempts} 回入力可能です。`);
-                }
+                alert(failedAttempts >= 3 ? "⚠ロックされました。" : `⚠パスワードが違います⚠\nあと ${3 - failedAttempts} 回可能です。`);
             }
         }
 
@@ -481,19 +416,25 @@
 
         function saveToStorage() { localStorage.setItem('fukousai_cache', JSON.stringify(cache)); }
 
+        // 随時更新が必要なデータを再取得する関数
         async function reloadAllData() {
             document.body.classList.add('updating');
             try {
-                const [resS, resT, resB, resL] = await Promise.all([
+                const [resS, resB, resL] = await Promise.all([
                     fetch(`${API_URL}?type=stores`),
-                    fetch(`${API_URL}?type=timetable`),
                     fetch(`${API_URL}?type=bus_timetable`), 
                     fetch(`${API_URL}?type=lost`)
                 ]);
                 cache.stores = await resS.json();
-                cache.timetable = await resT.json();
                 cache.bus = await resB.json();
                 cache.lostItems = await resL.json();
+                
+                // タイムテーブルは通常固定ですが、初回の読み込みのみ取得します
+                if (cache.timetable.length === 0) {
+                    const resT = await fetch(`${API_URL}?type=timetable`);
+                    cache.timetable = await resT.json();
+                }
+
                 saveToStorage();
                 refreshCurrentView();
                 await quickUpdate();
@@ -515,9 +456,11 @@
         }
 
         function refreshCurrentView() {
+            // 混雑状況の更新
             if (document.getElementById('stores-view').style.display === 'block') renderStores();
-            if (document.getElementById('timetable-view').style.display === 'block') renderTimetable();
+            // バスタイマーの更新
             updateBusTimer();
+            // 落とし物リストの更新
             renderLostItems();
         }
 
@@ -551,16 +494,20 @@
             }).join('');
         }
 
+        function normalizeImageUrl(url) {
+            if (!url) return 'https://via.placeholder.com/300';
+            if (url.startsWith('http')) return url;
+            return `lost_images/${url}.jpg`; 
+        }
+
         function renderLostItems() {
             const container = document.getElementById('lost-items-grid');
-            if (!cache.lostItems || cache.lostItems.length === 0) {
-                container.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:#94a3b8; padding:20px;">現在、登録されている落とし物はありません。</p>';
-                return;
-            }
+            const section = document.getElementById('lost-items-section');
+            if (!cache.lostItems || cache.lostItems.length === 0) { section.style.display = 'none'; return; }
+            section.style.display = 'block';
             container.innerHTML = cache.lostItems.map(item => `
                 <div class="store-card" onclick='openLostModal(${JSON.stringify(item)})'>
-                    <div class="congestion-badge status-low">保管中</div>
-                    <div class="store-img-wrapper"><img src="${item[2]||'https://via.placeholder.com/300'}" class="store-img"></div>
+                    <div class="store-img-wrapper"><img src="${normalizeImageUrl(item[3])}" class="store-img"></div>
                     <div class="store-name-tag">${item[0]}</div>
                 </div>
             `).join('');
@@ -568,9 +515,9 @@
 
         function openLostModal(item) {
             document.getElementById('m-title').textContent = item[0];
-            document.getElementById('m-img-container').innerHTML = item[2] ? `<img src="${item[2]}" style="width:100%; border-radius:12px;">` : '';
+            document.getElementById('m-img-container').innerHTML = item[3] ? `<img src="${normalizeImageUrl(item[3])}" style="width:100%; border-radius:12px;">` : '';
             document.getElementById('m-info').textContent = `📍発見場所: ${item[1]}`;
-            document.getElementById('m-desc').textContent = "心当たりのある方は、1F事務室または本部までお越しください。";
+            document.getElementById('m-desc').textContent = item[2] || "心当たりのある方は、1F事務室または本部までお越しください。";
             document.getElementById('modal').style.display = 'flex';
         }
 
@@ -578,25 +525,16 @@
             const timerEl = document.getElementById('bus-timer');
             const nextEl = document.getElementById('bus-next');
             if (!cache.bus || cache.bus.length === 0) return;
-
-            const now = new Date();
-            const nowMin = now.getHours() * 60 + now.getMinutes();
+            const now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
             let nextBus = null;
-
             for (let row of cache.bus) {
                 const t = parseTime(row[0]);
                 if (!t) continue;
-
                 const busMin = t.h * 60 + t.m;
-                if (busMin > nowMin) {
-                    nextBus = { h: t.h, m: t.m, min: busMin };
-                    break;
-                }
+                if (busMin > nowMin) { nextBus = { h: t.h, m: t.m, min: busMin }; break; }
             }
-
             if (nextBus) {
-                const diff = nextBus.min - nowMin;
-                timerEl.textContent = `次発まで あと ${diff} 分`;
+                timerEl.textContent = `次発まで あと ${nextBus.min - nowMin} 分`;
                 nextEl.textContent = `${String(nextBus.h).padStart(2,'0')}:${String(nextBus.m).padStart(2,'0')} 発車予定`;
             } else {
                 timerEl.textContent = "本日のバスは終了しました";
@@ -614,10 +552,7 @@
                 calendarArea.scrollLeft = targetCol.offsetLeft - 80;
                 const now = new Date(), m = (now.getHours() - START_H) * 60 + now.getMinutes();
                 if (m >= 0 && m < 480) {
-                    window.scrollTo({
-                        top: targetCol.getBoundingClientRect().top + window.scrollY + (m * SCALE),
-                        behavior: 'smooth'
-                    });
+                    window.scrollTo({ top: targetCol.getBoundingClientRect().top + window.scrollY + (m * SCALE), behavior: 'smooth' });
                 }
             }
         }
@@ -633,11 +568,9 @@
             EVENT_LOCATIONS.forEach(loc => {
                 const pin = document.createElement('div');
                 pin.className = 'event-pin';
-                pin.style.left = `${loc.left}%`;
-                pin.style.top = `${loc.top}%`;
+                pin.style.left = `${loc.left}%`; pin.style.top = `${loc.top}%`;
                 if(loc.color) pin.style.backgroundColor = loc.color;
-                pin.textContent = loc.name;
-                pin.onclick = () => scrollToVenue(loc.name);
+                pin.textContent = loc.name; pin.onclick = () => scrollToVenue(loc.name);
                 const pinId = "pin-" + loc.name.replace(/\s+/g, '');
                 pin.classList.add(pinId);
                 const style = document.createElement('style');
@@ -661,7 +594,6 @@
                     ${venueEvents.map(ev => {
                         const s = new Date(ev[1]), e = new Date(ev[2]);
                         if (isNaN(s.getTime()) || isNaN(e.getTime())) return '';
-                        
                         const top = ((s.getHours()-START_H)*60+s.getMinutes())*SCALE;
                         const h = ((e-s)/60000)*SCALE - GAP;
                         return `<div class="event" style="top:${top}px; height:${Math.max(h, 25)}px; background:${theme.bg}; border-left: 4px solid ${theme.border}" onclick='openEventModal(${JSON.stringify(ev)})'><strong>${ev[3]}</strong><small style="color:${theme.border}; font-weight:bold;">${s.getHours()}:${String(s.getMinutes()).padStart(2,'0')}〜</small></div>`;
@@ -684,10 +616,7 @@
             const s = new Date(ev[1]), e = new Date(ev[2]);
             document.getElementById('m-title').textContent = ev[3];
             document.getElementById('m-img-container').innerHTML = '';
-            
-            const timeStr = isNaN(s.getTime()) ? '時間未設定' : 
-                `${s.getHours()}:${String(s.getMinutes()).padStart(2,'0')} 〜 ${e.getHours()}:${String(e.getMinutes()).padStart(2,'0')}`;
-            
+            const timeStr = isNaN(s.getTime()) ? '時間未設定' : `${s.getHours()}:${String(s.getMinutes()).padStart(2,'0')} 〜 ${e.getHours()}:${String(e.getMinutes()).padStart(2,'0')}`;
             document.getElementById('m-info').textContent = `📍場所: ${ev[0]}\n⏰時間: ${timeStr}`;
             document.getElementById('m-desc').textContent = ev[4] || '詳細なし';
             document.getElementById('modal').style.display = 'flex';
@@ -708,11 +637,18 @@
                 document.body.classList.remove('updating');
                 refreshCurrentView();
             }
+            
+            // 初回データ取得
             await reloadAllData();
+
             const loader = document.getElementById('full-loader');
             loader.style.opacity = '0';
             setTimeout(() => loader.style.display = 'none', 500);
-            setInterval(quickUpdate, 10000);
+
+            // 【重要】10秒ごとに全データの「随時更新」を開始
+            setInterval(reloadAllData, 10000); 
+
+            // その他の時計・表示用タイマー
             setInterval(updateNowLine, 60000);
             setInterval(updateBusTimer, 30000);
         }
