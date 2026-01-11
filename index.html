@@ -377,11 +377,11 @@
         // --- 定数・初期設定 ---
         const CASHIER_URL = 'casher.html'; 
         const CASHIER_PW = "yL2Mj91Iab"; 
-
-        const FLOOR_MAPS = {'1': 'https://cdn.discordapp.com/attachments/1459091138190246045/1459347660275318845/Map_1.png?ex=6962f2eb&is=6961a16b&hm=9b76cb45e7fc798d57bd4699858405e16b544086033fb5a655840bfc44b49fe1&', 
-                            '2': 'https://cdn.discordapp.com/attachments/1459091138190246045/1459347662674329753/Map_2.png?ex=6962f2ec&is=6961a16c&hm=58be29a9441b313a86928e3ccdef02d150490a5b2be5792f644566a86601d393&', 
-                            '3': 'https://cdn.discordapp.com/attachments/1459091138190246045/1459347660875235483/Map_3.png?ex=6962f2eb&is=6961a16b&hm=c7703d1c54d9e3b6a2bf567c54a8a9ff3cd23c977870df342159ae2a3b236b88&' };
-        
+        const FLOOR_MAPS = { '1': 'https://cdn.discordapp.com/attachments/1459091138190246045/1459347660275318845/Map_1.png?ex=6962f2eb&is=6961a16b&hm=9b76cb45e7fc798d57bd4699858405e16b544086033fb5a655840bfc44b49fe1&', 
+                             '2': 'https://cdn.discordapp.com/attachments/1459091138190246045/1459347662674329753/Map_2.png?ex=6962f2ec&is=6961a16c&hm=58be29a9441b313a86928e3ccdef02d150490a5b2be5792f644566a86601d393&', 
+                             '3': 'https://cdn.discordapp.com/attachments/1459091138190246045/1459347660875235483/Map_3.png?ex=6962f2eb&is=6961a16b&hm=c7703d1c54d9e3b6a2bf567c54a8a9ff3cd23c977870df342159ae2a3b236b88&' 
+                           };
+                             
         const START_H = 9, SCALE = 1.5, GAP = 3;
         const VENUE_THEMES = { 
             '体育館': { bg: '#FFCDD2', border: '#E53935' }, 
@@ -620,14 +620,7 @@
             loader.style.opacity = '0';
             setTimeout(() => loader.style.display = 'none', 500);
 
-<<<<<<< HEAD
             // 定時更新が必要な表示処理のみ実行（通信はFirebaseが自動でやる）
-=======
-            // 【重要】10秒ごとに全データの「随時更新」を開始
-            setInterval(reloadAllData, 30000); 
-
-            // その他の時計・表示用タイマー
->>>>>>> 54a6a1f5480f6f4a427976730c1bfb6b09f442f8
             setInterval(updateNowLine, 60000);
             setInterval(updateBusTimer, 30000);
         };
